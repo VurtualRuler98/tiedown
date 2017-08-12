@@ -37,7 +37,11 @@ SWEP.Secondary.Automatic=true
 SWEP.Primary.Delay=0.05
 SWEP.Secondary.Delay=0.05
 SWEP.HoldType="passive"
-SWEP.MaxForce=15000
+SWEP.MaxForce=7500
+SWEP.PullForce=50
+SWEP.KickForce=1000
+SWEP.MaxKickForce=10000
+SWEP.NextKick=0
 function SWEP:Initialize()
 end
 function SWEP:Deploy()
@@ -49,33 +53,43 @@ function SWEP:FindPushable(len)
 		endpos=self.Owner:GetShootPos()+self.Owner:GetAimVector()*len,
 		filter=self.Owner
 	})
-	if (IsValid(tr.Entity) and not tr.Entity:IsWorld() and not tr.Entity:IsPlayer() and util.IsValidPhysicsObject(tr.Entity,tr.PhysicsBone)) then
+	if (IsValid(tr.Entity) and not tr.Entity:IsWorld() and not tr.Entity:IsPlayer()) then
 		return tr
 	end
 	return nil
 end
-function SWEP:PushPull(len,pull)
+function SWEP:PushPull(len,force,pull,maxforce,kick)
 	if (not self.Owner:IsOnGround()) then return end
-	local force=50
-	if (CLIENT) then return end
 	local tr=self:FindPushable(len)
 	if (tr and tr.Entity:IsValid()) then
+		if (kick) then self:EmitSound("flesh.ImpactHard") end
 		if (self.Owner:GetGroundEntity()==tr.Entity) then return end
-		local phys=tr.Entity:GetPhysicsObjectNum(tr.PhysicsBone)
-		if (phys) then
-			local newforce=force*phys:GetMass()
-			if (newforce>self.MaxForce) then newforce=self.MaxForce end
-			if (pull) then newforce=newforce*-1 end
-			if (phys:GetVelocity():Length()>50) then newforce=0 end
-			phys:ApplyForceCenter(self.Owner:GetAimVector()*newforce)
+		if (SERVER and util.IsValidPhysicsObject(tr.Entity,tr.PhysicsBone)) then
+			local phys=tr.Entity:GetPhysicsObjectNum(tr.PhysicsBone)
+			if (phys) then
+				local newforce=force*phys:GetMass()
+				if (newforce>maxforce) then newforce=maxforce end
+				if (phys:GetMass()>2500) then newforce=0 end
+				if (pull) then newforce=newforce*-1 end
+				if (phys:GetVelocity():Length()>50) then newforce=0 end
+				local vec=self.Owner:GetAimVector()
+				if (kick) then vec.z=0 end
+				phys:ApplyForceCenter(vec*newforce)
+			end
 		end
-	end
+	elseif (kick) then self:EmitSound("weapon_slam.satchelthrow") end
 end
 function SWEP:PrimaryAttack()
-	self:PushPull(100,false)
+	self:PushPull(100,self.PullForce,false,self.MaxForce,false)
 end
 function SWEP:SecondaryAttack()
-	self:PushPull(100,true)
+	self:PushPull(100,self.PullForce,true,self.MaxForce,false)
+end
+function SWEP:Reload()
+	if (self.NextKick<CurTime()) then
+		self:PushPull(100,self.KickForce,false,self.MaxKickForce,true)
+		self.NextKick=CurTime()+1.5
+	end
 end
 function SWEP:DrawWorldModel()
 	return
