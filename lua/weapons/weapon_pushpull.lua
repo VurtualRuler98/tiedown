@@ -55,6 +55,7 @@ function SWEP:FindPushable(len)
 	return nil
 end
 function SWEP:PushPull(len,pull)
+	if (not self.Owner:IsOnGround()) then return end
 	local force=50
 	if (CLIENT) then return end
 	local tr=self:FindPushable(len)
