@@ -1,0 +1,5 @@
+"AddonInfo"
+{
+	"name"		"Vurtual's tie down"
+	"override"	"1"
+}
