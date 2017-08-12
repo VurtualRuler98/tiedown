@@ -59,7 +59,8 @@ function SWEP:PushPull(len,pull)
 	local force=50
 	if (CLIENT) then return end
 	local tr=self:FindPushable(len)
-	if (tr) then
+	if (tr and tr.Entity:IsValid()) then
+		if (self.Owner:GetGroundEntity()==tr.Entity) then return end
 		local phys=tr.Entity:GetPhysicsObjectNum(tr.PhysicsBone)
 		if (phys) then
 			local newforce=force*phys:GetMass()
