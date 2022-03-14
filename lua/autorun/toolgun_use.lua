@@ -7,7 +7,7 @@ if (SERVER) then
 		end
 	end)
 	hook.Add("PlayerUse","ToolgunDisableUse",function(ply,ent)
-		if (ply:GetActiveWeapon():GetClass()=="gmod_tool" and ply:GetInfoNum("cl_toolgun_allow_use",1)==0) then
+		if (IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon():GetClass()=="gmod_tool" and ply:GetInfoNum("cl_toolgun_allow_use",1)==0) then
 			return false
 		end
 	end)
